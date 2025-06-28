@@ -29,6 +29,7 @@ const Navbar = () => {
           <>
             <button onClick={() =>{ navigate('/educator')}}>{isEducator ? 'Educator Dashboard' : 'Become Educator'}</button>
             |  <Link to='/my-enrollments' >My Enrollments</Link>
+            |  <Link to='/quiz' className='hover:text-purple-600 transition-colors'>Take Quiz</Link>
           </>
               }
         </div>

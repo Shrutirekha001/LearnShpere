@@ -17,7 +17,6 @@ const AddCourse = () => {
   const [currentChapterId, setCurrentChapterId] = useState(null);
 
   const [lectureDetails, setLectureDetails] = useState({
-
     lectureTitle: '',
     lectureDuration: '',
     lectureUrl: '',
@@ -91,7 +90,6 @@ const AddCourse = () => {
 
     e.preventDefault()
    };
-
 
  useEffect(()=>{
   // Initialize Quill only once
