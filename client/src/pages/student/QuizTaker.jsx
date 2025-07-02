@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useContext } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { assets } from '../../assets/assets'
 import Footer from '../../components/student/Footer'
 import Loading from '../../components/student/Loading'
+import { AppContext } from '../../context/AppContext'
 
 const QuizTaker = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { backendUrl, getToken } = useContext(AppContext)
   
   const [quizData, setQuizData] = useState(null)
   const [userAnswers, setUserAnswers] = useState({})
@@ -55,19 +57,23 @@ const QuizTaker = () => {
 
   const fetchQuizData = async () => {
     try {
-      setLoading(true)
-      const response = await fetch(`http://localhost:5000/api/quiz/${id}`)
-      const data = await response.json()
-      
+      setLoading(true);
+      const token = await getToken();
+      const response = await fetch(`${backendUrl}/api/quiz/${id}`, {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+      const data = await response.json();
       if (data.success) {
-        setQuizData(data.quiz)
+        setQuizData(data.quiz);
       } else {
-        setError(data.message)
+        setError(data.message);
       }
     } catch (error) {
-      setError('Failed to load quiz')
+      setError('Failed to load quiz');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -80,19 +86,22 @@ const QuizTaker = () => {
 
   const submitQuiz = async (answersOverride) => {
     try {
-      const response = await fetch('http://localhost:5000/api/quiz/submit', {
+      const token = await getToken();
+      const response = await fetch(`${backendUrl}/api/quiz/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
           quizId: id,
           answers: Object.values(answersOverride || userAnswers)
         }),
-      })
+      });
 
-      const data = await response.json()
-      
+      const data = await response.json();
+      console.log('Quiz submit response:', data);
+
       if (data.success) {
         setScore(data.result.score)
         setQuizCompleted(true)
@@ -102,6 +111,7 @@ const QuizTaker = () => {
       }
     } catch (error) {
       setError('Failed to submit quiz')
+      console.error('Quiz submit error:', error)
     }
   }
 
@@ -281,7 +291,7 @@ const QuizTaker = () => {
 
                 {currentQuestion === quizData.questions.length - 1 ? (
                   <button
-                    onClick={submitQuiz}
+                    onClick={() => submitQuiz()}
                     disabled={Object.keys(userAnswers).length < quizData.questions.length}
                     className='bg-gradient-to-r from-green-500 to-blue-500 hover:shadow-[0_0_12px_rgba(34,197,94,0.4),0_0_12px_rgba(59,130,246,0.3)] text-white px-8 py-2 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed'
                   >

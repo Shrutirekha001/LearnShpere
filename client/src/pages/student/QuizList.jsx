@@ -1,23 +1,30 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import { assets } from '../../assets/assets'
 import QuizCard from '../../components/student/QuizCard'
 import Footer from '../../components/student/Footer'
 import Loading from '../../components/student/Loading'
+import { AppContext } from '../../context/AppContext'
 
 const QuizList = () => {
   const [quizzes, setQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [search, setSearch] = useState("")
+  const { backendUrl, getToken } = useContext(AppContext)
 
   useEffect(() => {
     fetchQuizzes()
-  }, [])
+  }, [backendUrl, getToken])
 
   const fetchQuizzes = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://localhost:5000/api/quiz')
+      let headers = {}
+      if (getToken) {
+        const token = await getToken()
+        if (token) headers['Authorization'] = `Bearer ${token}`
+      }
+      const response = await fetch(`${backendUrl}/api/quiz`, { headers })
       const data = await response.json()
       
       if (data.success) {
