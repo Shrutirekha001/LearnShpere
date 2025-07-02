@@ -19,7 +19,7 @@ const CourseCard = ({ course }) => {
       </div>
       <div className="p-3 text-left">
         <h3 className='text-base font-semibold text-gray-800 group-hover:text-purple-600 transition-colors'>{course.courseTitle}</h3>
-        <p className='text-gray-600 mt-1'>LearnShpere</p>
+        <p className='text-gray-600 mt-1'>{course.educator.name}</p>
         <div className='flex items-center space-x-2 mt-2'>
           <p className='text-purple-600 font-medium'>{calculateRating(course)}</p>
           <div className='flex'>

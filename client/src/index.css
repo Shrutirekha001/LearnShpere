@@ -77,4 +77,73 @@
     animation: gradient-x 3s ease infinite;
   }
 
+/* Gemini AI Logo Animation */
+.gemini-animate1 {
+  animation: gemini-float1 2.5s ease-in-out infinite alternate;
+}
+.gemini-animate2 {
+  animation: gemini-float2 2.5s ease-in-out infinite alternate;
+}
+@keyframes gemini-float1 {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-4px); }
+}
+@keyframes gemini-float2 {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(4px); }
+}
+
+/* Magical Star Cluster Animations */
+.star-pop-float {
+  animation: star-pop 0.7s cubic-bezier(0.23, 1.12, 0.32, 1) 0s 1, star-float 2.5s ease-in-out 0.7s infinite alternate;
+  transform-origin: 32px 24px;
+}
+@keyframes star-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  80% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes star-float {
+  0% { transform: translateY(0px); }
+  100% { transform: translateY(-8px); }
+}
+.star-blink1 {
+  animation: star-blink 1.2s linear 0.5s infinite;
+}
+.star-blink2 {
+  animation: star-blink 1.2s linear 0.9s infinite;
+}
+.star-blink3 {
+  animation: star-blink 1.2s linear 1.3s infinite;
+}
+@keyframes star-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+.star-rotate1 {
+  animation: star-rotate1 5s linear infinite;
+  transform-origin: 20px 44px;
+}
+@keyframes star-rotate1 {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.star-rotate2 {
+  animation: star-rotate2 6s linear infinite reverse;
+  transform-origin: 15px 18px;
+}
+@keyframes star-rotate2 {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+.star-rotate3 {
+  animation: star-rotate3 7s linear infinite;
+  transform-origin: 49px 47px;
+}
+@keyframes star-rotate3 {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 

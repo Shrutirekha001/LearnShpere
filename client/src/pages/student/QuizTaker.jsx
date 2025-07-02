@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { assets } from '../../assets/assets'
 import Footer from '../../components/student/Footer'
@@ -16,10 +16,42 @@ const QuizTaker = () => {
   const [showResults, setShowResults] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [timeLeft, setTimeLeft] = useState(null)
+  const timerRef = useRef()
+  const userAnswersRef = useRef(userAnswers)
 
   useEffect(() => {
     fetchQuizData()
   }, [id])
+
+  useEffect(() => {
+    userAnswersRef.current = userAnswers
+  }, [userAnswers])
+
+  // Timer effect
+  useEffect(() => {
+    if (quizData && quizData.timeLimit > 0 && !showResults) {
+      setTimeLeft(quizData.timeLimit * 60)
+      if (timerRef.current) clearInterval(timerRef.current)
+      timerRef.current = setInterval(() => {
+        setTimeLeft(prev => {
+          if (prev === 1) {
+            clearInterval(timerRef.current)
+            handleAutoSubmit()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+      return () => clearInterval(timerRef.current)
+    }
+  }, [quizData, showResults])
+
+  const handleAutoSubmit = () => {
+    if (!showResults && !quizCompleted) {
+      submitQuiz(userAnswersRef.current)
+    }
+  }
 
   const fetchQuizData = async () => {
     try {
@@ -46,7 +78,7 @@ const QuizTaker = () => {
     }))
   }
 
-  const submitQuiz = async () => {
+  const submitQuiz = async (answersOverride) => {
     try {
       const response = await fetch('http://localhost:5000/api/quiz/submit', {
         method: 'POST',
@@ -55,7 +87,7 @@ const QuizTaker = () => {
         },
         body: JSON.stringify({
           quizId: id,
-          answers: Object.values(userAnswers)
+          answers: Object.values(answersOverride || userAnswers)
         }),
       })
 
@@ -148,6 +180,13 @@ const QuizTaker = () => {
             <p className='text-gray-600 max-w-2xl mx-auto'>
               {quizData.description}
             </p>
+            {/* Timer */}
+            {quizData.timeLimit > 0 && !showResults && (
+              <div className={`mt-4 text-lg font-semibold ${timeLeft !== null && timeLeft <= 60 ? 'text-red-600 animate-pulse' : 'text-blue-600'}`}>
+                Time Left: {timeLeft !== null ? `${Math.floor(timeLeft/60)}:${(timeLeft%60).toString().padStart(2,'0')}` : '--:--'}
+                {timeLeft !== null && timeLeft <= 60 && <span className='ml-2 text-sm'>(Hurry up! Less than 1 minute left)</span>}
+              </div>
+            )}
           </div>
 
           {!showResults ? (

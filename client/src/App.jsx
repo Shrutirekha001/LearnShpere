@@ -16,12 +16,15 @@ import "quill/dist/quill.snow.css";
 import QuizGenerator from './pages/educator/QuizGenerator'
 import QuizList from './pages/student/QuizList'
 import QuizTaker from './pages/student/QuizTaker'
+import MyQuizzes from './pages/educator/MyQuizzes'
+import { ToastContainer } from 'react-toastify';
 
 const App = () => {
 
   const isEducatorRoute = useMatch('/educator/*');
   return (
     <div className='text-default min-h-screen bg-white'>
+      <ToastContainer/>
       {!isEducatorRoute &&  
       <Navbar/>}
       <Routes>
@@ -45,6 +48,7 @@ const App = () => {
            <Route path='my-courses' element={<MyCourse/>}/>
            <Route path='students-enrolled' element={<StudentsEnrolled/>}/>
            <Route path='quiz-generator' element={<QuizGenerator/>}/>
+           <Route path='my-quizzes' element={<MyQuizzes/>}/>
 
         </Route>
 

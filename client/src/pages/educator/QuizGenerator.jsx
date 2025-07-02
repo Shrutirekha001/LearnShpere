@@ -1,8 +1,11 @@
-import React, { useState } from 'react'
+import React, { useContext, useState } from 'react'
 import { assets } from '../../assets/assets'
+import { AppContext } from '../../context/AppContext'
 
 const QuizGenerator = () => {
   const [activeTab, setActiveTab] = useState('ai')
+
+  const { getToken, backendUrl } = useContext(AppContext);
 
   // AI Quiz Generator State
   const [inputText, setInputText] = useState('')
@@ -30,6 +33,11 @@ const QuizGenerator = () => {
   const [aiSaveSuccess, setAiSaveSuccess] = useState(null)
   const [aiSaveError, setAiSaveError] = useState(null)
 
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [aiQuizTitle, setAiQuizTitle] = useState('')
+  const [aiQuizDescription, setAiQuizDescription] = useState('')
+  const [aiQuizTimeLimit, setAiQuizTimeLimit] = useState('')
+
   const generateQuiz = async () => {
     if (!inputText.trim()) {
       setQuizData(prev => ({
@@ -42,7 +50,7 @@ const QuizGenerator = () => {
     setQuizData(prev => ({ ...prev, isLoading: true, error: null }))
     
     try {
-      const response = await fetch('http://localhost:5000/api/quiz/generate-quiz', {
+      const response = await fetch(`${backendUrl}/api/quiz/generate-quiz`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -93,13 +101,21 @@ const QuizGenerator = () => {
           options: [],
           correctAnswer: ''
         }
-      } else if (line.match(/^[a-d]\)/)) {
+      } else if (line.match(/^[a-d]\)/i)) {
         if (currentQuestion) {
           currentQuestion.options.push(line.substring(2).trim())
         }
       } else if (line.toLowerCase().includes('correct answer:')) {
         if (currentQuestion) {
-          currentQuestion.correctAnswer = line.split(':')[1].trim()
+          // Extract just the letter (a/b/c/d) and convert to uppercase
+          const match = line.match(/correct answer:\s*([a-dA-D])/i);
+          if (match) {
+            currentQuestion.correctAnswer = match[1].toUpperCase();
+          } else {
+            // fallback: try to get the first letter if format is like 'b)' or 'B)'
+            const fallback = line.split(':')[1]?.trim()?.charAt(0);
+            currentQuestion.correctAnswer = fallback ? fallback.toUpperCase() : '';
+          }
         }
       }
     }
@@ -179,9 +195,13 @@ const QuizGenerator = () => {
       questions: manualQuiz.questions
     }
     try {
-      const res = await fetch('http://localhost:5000/api/quiz/create', {
+      const token = await getToken();
+      const res = await fetch(`${backendUrl}/api/quiz/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       })
       const data = await res.json()
@@ -208,25 +228,38 @@ const QuizGenerator = () => {
     setAiSaveError(null)
     setAiSaveSuccess(null)
     if (!quizData.questions.length) return
-    const title = prompt('Enter a title for this quiz:')
-    if (!title) return
-    const description = prompt('Enter a description for this quiz:') || ''
+    setShowSaveModal(true)
+  }
+
+  const handleSaveAIModal = async () => {
+    if (!aiQuizTitle.trim()) {
+      setAiSaveError('Quiz title is required.')
+      return
+    }
     setAiSaveLoading(true)
     const payload = {
-      title,
-      description,
-      timeLimit: 0,
+      title: aiQuizTitle,
+      description: aiQuizDescription,
+      timeLimit: Number(aiQuizTimeLimit) || 0,
       questions: quizData.questions
     }
     try {
-      const res = await fetch('http://localhost:5000/api/quiz/create', {
+      const token = await getToken();
+      const res = await fetch(`${backendUrl}/api/quiz/create`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(payload)
       })
       const data = await res.json()
       if (data.success) {
         setAiSaveSuccess('Quiz saved successfully!')
+        setShowSaveModal(false)
+        setAiQuizTitle('')
+        setAiQuizDescription('')
+        setAiQuizTimeLimit('')
         // Optionally clear quizData or redirect
       } else {
         setAiSaveError(data.message || 'Failed to save quiz.')
@@ -261,9 +294,34 @@ const QuizGenerator = () => {
           <>
             {/* Header */}
             <div className='text-center mb-8'>
-              <h1 className='text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-transparent bg-clip-text mb-4'>
-                AI Quiz Generator
-              </h1>
+              <div className='flex items-center justify-center gap-4 mb-2'>
+                <span className='inline-flex items-center justify-center w-16 h-16 relative'>
+                  {/* Modern magical star cluster logo */}
+                  <svg className='w-16 h-16' viewBox='0 0 64 64' fill='none'>
+                    <defs>
+                      <linearGradient id='star-blue' x1='0' y1='0' x2='1' y2='1'>
+                        <stop offset='0%' stopColor='#38bdf8' />
+                        <stop offset='100%' stopColor='#6366f1' />
+                      </linearGradient>
+                      <linearGradient id='star-teal' x1='0' y1='0' x2='1' y2='1'>
+                        <stop offset='0%' stopColor='#34d399' />
+                        <stop offset='100%' stopColor='#38bdf8' />
+                      </linearGradient>
+                    </defs>
+                    {/* Main big star with pop-in and float animation */}
+                    <path d='M32 10c.5-1.5 2.5-1.5 3 0l2.7 7.7a2 2 0 0 0 1.3 1.3l7.7 2.7c1.5.5 1.5 2.5 0 3l-7.7 2.7a2 2 0 0 0-1.3 1.3l-2.7 7.7c-.5 1.5-2.5 1.5-3 0l-2.7-7.7a2 2 0 0 0-1.3-1.3l-7.7-2.7c-1.5-.5-1.5-2.5 0-3l7.7-2.7a2 2 0 0 0 1.3-1.3L32 10z' fill='url(#star-blue)' className='star-pop-float'/>
+                    {/* Bottom left star with blink animation */}
+                    <path d='M16 38c.3-.9 1.5-.9 1.8 0l1.6 4.5c.1.3.3.5.6.6l4.5 1.6c.9.3.9 1.5 0 1.8l-4.5 1.6a.9.9 0 0 0-.6.6l-1.6 4.5c-.3.9-1.5.9-1.8 0l-1.6-4.5a.9.9 0 0 0-.6-.6l-4.5-1.6c-.9-.3-.9-1.5 0-1.8l4.5-1.6c.3-.1.5-.3.6-.6L16 38z' fill='url(#star-teal)' className='star-blink1'/>
+                    {/* Top left star with blink animation */}
+                    <path d='M14 14c.2-.6 1-.6 1.2 0l1.1 3.1c.1.2.2.3.4.4l3.1 1.1c.6.2.6 1 0 1.2l-3.1 1.1a.6.6 0 0 0-.4.4l-1.1 3.1c-.2.6-1 .6-1.2 0l-1.1-3.1a.6.6 0 0 0-.4-.4l-3.1-1.1c-.6-.2-.6-1 0-1.2l3.1-1.1c.2-.1.3-.2.4-.4L14 14z' fill='url(#star-teal)' className='star-blink2'/>
+                    {/* Small right star with blink animation */}
+                    <path d='M48 44c.15-.45.85-.45 1 0l.9 2.5c.05.15.15.25.3.3l2.5.9c.45.15.45.85 0 1l-2.5.9a.4.4 0 0 0-.3.3l-.9 2.5c-.15.45-.85.45-1 0l-.9-2.5a.4.4 0 0 0-.3-.3l-2.5-.9c-.45-.15-.45-.85 0-1l2.5-.9c.15-.05.25-.15.3-.3L48 44z' fill='url(#star-blue)' className='star-blink3'/>
+                  </svg>
+                </span>
+                <h1 className='text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 text-transparent bg-clip-text'>
+                  AI Quiz Generator
+                </h1>
+              </div>
               <p className='text-gray-600 max-w-2xl mx-auto'>
                 Generate intelligent quiz questions from your course content using AI. 
                 Simply paste your text and get 5 multiple choice questions with correct answers.
@@ -375,11 +433,57 @@ const QuizGenerator = () => {
                   </button>
                 </div>
 
+                {/* Save AI Quiz Modal */}
+                {showSaveModal && (
+                  <div className='fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50'>
+                    <div className='bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative'>
+                      <button
+                        onClick={() => setShowSaveModal(false)}
+                        className='absolute top-3 right-3 text-gray-500 hover:text-red-500 text-2xl font-bold'>&times;</button>
+                      <h2 className='text-xl font-bold mb-4'>Save AI-Generated Quiz</h2>
+                      <div className='mb-4'>
+                        <label className='block text-gray-700 font-medium mb-1'>Quiz Title</label>
+                        <input
+                          type='text'
+                          value={aiQuizTitle}
+                          onChange={e => setAiQuizTitle(e.target.value)}
+                          className='w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-purple-500'
+                          required
+                        />
+                      </div>
+                      <div className='mb-4'>
+                        <label className='block text-gray-700 font-medium mb-1'>Description</label>
+                        <textarea
+                          value={aiQuizDescription}
+                          onChange={e => setAiQuizDescription(e.target.value)}
+                          className='w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-purple-500'
+                          rows={2}
+                        />
+                      </div>
+                      <div className='mb-4'>
+                        <label className='block text-gray-700 font-medium mb-1'>Time Limit (minutes)</label>
+                        <input
+                          type='number'
+                          value={aiQuizTimeLimit}
+                          onChange={e => setAiQuizTimeLimit(e.target.value)}
+                          className='w-full border border-gray-300 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-purple-500'
+                          min={0}
+                        />
+                      </div>
+                      {aiSaveError && <div className='mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600'>{aiSaveError}</div>}
+                      <button
+                        onClick={handleSaveAIModal}
+                        disabled={aiSaveLoading}
+                        className='w-full bg-gradient-to-r from-green-500 to-blue-500 text-white py-3 px-6 rounded-lg font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed'
+                      >
+                        {aiSaveLoading ? 'Saving...' : 'Save Quiz'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {aiSaveSuccess && (
                   <div className='mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700'>{aiSaveSuccess}</div>
-                )}
-                {aiSaveError && (
-                  <div className='mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600'>{aiSaveError}</div>
                 )}
               </div>
             )}
