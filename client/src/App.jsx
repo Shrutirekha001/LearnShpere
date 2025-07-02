@@ -13,6 +13,9 @@ import MyCourse from './pages/educator/MyCourse'
 import StudentsEnrolled from './pages/educator/StudentsEnrolled'
 import Navbar from './components/student/Navbar'
 import "quill/dist/quill.snow.css";
+import QuizGenerator from './pages/educator/QuizGenerator'
+import QuizList from './pages/student/QuizList'
+import QuizTaker from './pages/student/QuizTaker'
 
 const App = () => {
 
@@ -30,13 +33,19 @@ const App = () => {
         <Route path='/player/:courseId' element={<Player/>}/>
         <Route path='/loading/:path' element={<Loading/>}/>
         
+        <Route path='/quiz' element={<QuizList/>}/>
+        <Route path='/quiz/:id' element={<QuizTaker/>}/>
+
+        
+        {/* Educator Routes */}
 
         <Route path='/educator' element={<Educator/>}>
            <Route path='/educator' element={<Dashboard/>}/>
            <Route path='add-course' element={<AddCourse/>}/>
            <Route path='my-courses' element={<MyCourse/>}/>
            <Route path='students-enrolled' element={<StudentsEnrolled/>}/>
-           
+           <Route path='quiz-generator' element={<QuizGenerator/>}/>
+
         </Route>
 
 
