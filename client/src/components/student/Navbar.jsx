@@ -56,7 +56,7 @@ const Navbar = () => {
               }
         </div>
         { user ? <UserButton/> :
-           <button onClick={() => openSignIn()} className=' glow-button text-white text-xl font-bold py-3 px-10 rounded-full'>Create Account</button>}
+           <button onClick={() => openSignIn()} className=' glow-button text-white text-xl font-bold py-3 px-10 rounded-full'>Sign In</button>}
       </div>
       {/* Mobile Menu */}
      
